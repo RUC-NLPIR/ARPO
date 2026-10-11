@@ -30,8 +30,8 @@ import verl.utils.torch_functional as verl_F
 from verl import DataProto
 from verl.trainer.ppo.core_algos import (
     agg_loss,
-    kl_penalty,
     compute_policy_loss_entropy_balanced_clipping,
+    kl_penalty,
 )
 from verl.utils.debug import GPUMemoryLogger
 from verl.utils.device import (
@@ -529,9 +529,9 @@ class DataParallelPPOActor(BasePPOActor):
                     loss_agg_mode = self.config.loss_agg_mode
 
                     # all return: (bsz, response_length)
-                    calculate_entropy = False
-                    if entropy_coeff != 0:
-                        calculate_entropy = True
+                    calculate_entropy = (
+                        entropy_coeff != 0 or self.enable_entropy_balanced_advantage
+                    )
                     entropy, log_prob = self._forward_micro_batch(
                         micro_batch=data,
                         temperature=temperature,
