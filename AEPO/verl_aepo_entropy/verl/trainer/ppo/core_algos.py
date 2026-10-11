@@ -623,7 +623,9 @@ def compute_policy_loss_entropy_balanced_clipping(
         valid_entropy = entropy * response_mask.float()
         valid_entropy_flat = valid_entropy[response_mask.bool()]
 
-        if len(valid_entropy_flat) > 0:
+        # A single valid token has no entropy variation to reweight, and its
+        # sample standard deviation is undefined.
+        if len(valid_entropy_flat) > 1:
             entropy_mean = valid_entropy_flat.mean()
             entropy_std = valid_entropy_flat.std()
 
