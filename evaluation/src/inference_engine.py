@@ -11,7 +11,7 @@ from tqdm.asyncio import tqdm as async_tqdm
 from .prompt_manager import PromptManager
 from .data_loader import DataLoader
 from .tools.tool_executor import ToolExecutor
-from .tools import PythonTool, BingSearchTool, BingSearchToolSDS
+from .tools import PythonTool, BingSearchTool, BingSearchToolSDS, YouSearchTool, YouSearchToolSDS
 from .vllm_client_pool import VLLMClientPool
 from .sample_processor import SampleProcessor, SampleProcessorCompletion
 
@@ -66,8 +66,10 @@ class AsyncInference:
             max_concurrent=self.args.python_max_concurrent,
         )
         tool_executor.register_tool(python_tool)
-        search_tool = BingSearchTool(
-            api_key=self.args.bing_api_key,
+        use_you = getattr(self.args, "search_provider", "bing") == "you"
+        search_cls = YouSearchTool if use_you else BingSearchTool
+        search_tool = search_cls(
+            api_key=self.args.ydc_api_key if use_you else self.args.bing_api_key,
             zone=self.args.bing_zone,
             max_results=self.args.search_max_results,
             result_length=self.args.search_result_length,
@@ -263,8 +265,10 @@ class AsyncInferenceCompletionSDS(AsyncInferenceCompletion):
             max_concurrent=self.args.python_max_concurrent,
         )
         tool_executor.register_tool(python_tool)
-        search_tool = BingSearchToolSDS(
-            api_key=self.args.bing_api_key,
+        use_you = getattr(self.args, "search_provider", "bing") == "you"
+        search_cls = YouSearchToolSDS if use_you else BingSearchToolSDS
+        search_tool = search_cls(
+            api_key=self.args.ydc_api_key if use_you else self.args.bing_api_key,
             zone=self.args.bing_zone,
             max_results=self.args.search_max_results,
             result_length=self.args.search_result_length,

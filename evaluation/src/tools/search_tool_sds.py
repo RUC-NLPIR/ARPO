@@ -484,3 +484,27 @@ You are tasked with reading and analyzing web pages based on the following input
 
 Now you should analyze each web page and find helpful information based on the current search query "{search_query}" and previous reasoning steps.
 """
+
+
+class YouSearchToolSDS(BingSearchToolSDS):
+    """BingSearchToolSDS with You.com as the search backend. Key is optional."""
+
+    def __init__(self, api_key: str = "", **kwargs):
+        kwargs.pop("zone", None)
+        super().__init__(api_key=api_key, **kwargs)
+
+    @property
+    def name(self) -> str:
+        return "you_search"
+
+    def _make_request(self, query: str, timeout: int):
+        from .you_search import you_search_request
+
+        return you_search_request(
+            query,
+            count=self._max_results,
+            api_key=self._api_key or None,
+            timeout=timeout,
+            max_retries=self._max_retries,
+            retry_delay=self._retry_delay,
+        )

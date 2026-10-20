@@ -830,6 +830,8 @@ SUMM_MODEL_PATH="<your_summarization_model_path>"  # Path to summarization model
 ```
 > For Bing API usage, please refer to [Bright Data](https://brightdata.com/).
 
+> **Optional: You.com search.** Set `SEARCH_PROVIDER="you"` in `infer_local_sds.sh` (or pass `--search_provider you` to `infer.py`) to use You.com instead of Bright Data. No key is needed for a quick run: the free tier allows 100 searches a day per IP. For full benchmark runs, set `YDC_API_KEY` (get one at https://you.com/platform?utm_source=ruc-nlpir-arpo&utm_medium=oss_integration&utm_campaign=2026-10-oss-integrations&utm_content=readme). Bing stays the default, and results are mapped to the same format, so the SDS page fetch and summarization steps are unchanged.
+
 Run the evaluation:
 ```bash
 bash evaluation/infer_local_sds.sh

@@ -83,6 +83,8 @@ COUNTS=500                        # Number of samples to process
 CONDA_PATH="<your conda path>/"   # Conda installation path
 CONDA_ENV="<your conda env>"                                # Conda environment name
 PYTHON_MAX_CONCURRENT=32                        # Max concurrent Python executor
+SEARCH_PROVIDER="bing"                          # "bing" (Bright Data) or "you" (You.com, no key needed)
+YDC_API_KEY="${YDC_API_KEY:-}"                  # Optional You.com key for higher limits
 BING_API_KEY="<your bing search key>"  # Bing Search API key
 BING_ZONE="<bing zone>"                        # Bing search zone
 SEARCH_MAX_RESULTS=10                            # Max number of search results
@@ -138,8 +140,13 @@ fi
 CMD+=" --conda_path $CONDA_PATH"
 CMD+=" --conda_env $CONDA_ENV"
 CMD+=" --python_max_concurrent $PYTHON_MAX_CONCURRENT"
-CMD+=" --bing_api_key $BING_API_KEY"
-CMD+=" --bing_zone $BING_ZONE"
+CMD+=" --search_provider $SEARCH_PROVIDER"
+if [ "$SEARCH_PROVIDER" = "you" ]; then
+    [ -n "$YDC_API_KEY" ] && CMD+=" --ydc_api_key $YDC_API_KEY"
+else
+    CMD+=" --bing_api_key $BING_API_KEY"
+    CMD+=" --bing_zone $BING_ZONE"
+fi
 CMD+=" --search_max_results $SEARCH_MAX_RESULTS"
 CMD+=" --search_result_length $SEARCH_RESULT_LENGTH"
 CMD+=" --bing_requests_per_second $BING_REQUESTS_PER_SECOND"

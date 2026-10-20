@@ -81,8 +81,12 @@ def parse_arguments():
                              help="Conda environment name")
     tools_group.add_argument("--python_max_concurrent", type=int, default=32,
                              help="Maximum concurrency for Python executor")
-    tools_group.add_argument("--bing_api_key", type=str, required=True,
-                             help="Bing Search API key")
+    tools_group.add_argument("--search_provider", type=str, default="bing", choices=["bing", "you"],
+                             help="Search backend: 'bing' (Bright Data Bing zone, default) or 'you' (You.com, works without a key)")
+    tools_group.add_argument("--bing_api_key", type=str, default=None,
+                             help="Bing Search API key (required when --search_provider is bing)")
+    tools_group.add_argument("--ydc_api_key", type=str, default=os.environ.get("YDC_API_KEY", ""),
+                             help="Optional You.com API key (defaults to $YDC_API_KEY). Leave empty for the keyless free tier, 100 searches a day")
     tools_group.add_argument("--bing_zone", type=str, default="serp_api1",
                              help="Bing search region")
     tools_group.add_argument("--search_max_results", type=int, default=10,
@@ -105,7 +109,10 @@ def parse_arguments():
                              help="Cache file for search results")
     tools_group.add_argument("--url_cache_file", type=str, default="search_url_cache.db",
                              help="Cache file for web pages")  
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.search_provider == "bing" and not args.bing_api_key:
+        parser.error("--bing_api_key is required when --search_provider is bing")
+    return args
 
 
 def get_inference_instance():
