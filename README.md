@@ -804,6 +804,10 @@ pip install -r requirements.txt
 
 ### 3. Configure and Run Evaluation
 
+For free, keyless web search in the English evaluation pipeline, see the
+[Parallel Search MCP setup and provider selection](evaluation/README.md). Existing
+Bing-key scripts retain their search provider.
+
 Edit the `infer_local_sds.sh` script with the following values:
 
 ```bash

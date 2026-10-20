@@ -3,8 +3,6 @@ import os
 sys.path.append(os.getcwd())
 import asyncio
 import argparse
-import nltk
-nltk.download('punkt')
 
 infer_mode_help = """Inference mode selection
 [default]       :    Basic behavior similar to the original search tool, uses summarization and continuously appends to the assistant content.
@@ -75,13 +73,15 @@ def parse_arguments():
                                  help="Timeout in seconds for processing a single sample")
 
     tools_group = parser.add_argument_group("Tool Configuration")
-    tools_group.add_argument("--conda_path", type=str",
+    tools_group.add_argument("--conda_path", type=str,
                              help="Path to Conda installation")
     tools_group.add_argument("--conda_env", type=str,
                              help="Conda environment name")
     tools_group.add_argument("--python_max_concurrent", type=int, default=32,
                              help="Maximum concurrency for Python executor")
-    tools_group.add_argument("--bing_api_key", type=str, required=True,
+    tools_group.add_argument("--search_provider", choices=["auto", "parallel", "bing", "none"], default="auto",
+                             help="auto keeps configured Bing; otherwise uses keyless Parallel (SDS requires Bing)")
+    tools_group.add_argument("--bing_api_key", type=str, default=None,
                              help="Bing Search API key")
     tools_group.add_argument("--bing_zone", type=str, default="serp_api1",
                              help="Bing search region")
@@ -99,7 +99,7 @@ def parse_arguments():
                              help="Local summarization LLM API endpoints")
     tools_group.add_argument("--summ_model_name", type=str, default="Qwen2.5-72B-Instruct",
                              help="Name of local summarization LLM")
-    tools_group.add_argument("--summ_model_path", type=str",
+    tools_group.add_argument("--summ_model_path", type=str,
                              help="Path to local summarization LLM for tokenizer")
     tools_group.add_argument("--search_cache_file", type=str, default="search_cache.db",
                              help="Cache file for search results")
@@ -110,11 +110,15 @@ def parse_arguments():
 
 def get_inference_instance():
     args = parse_arguments()
+    from src.tools.search_provider import resolve_search_provider
+    resolve_search_provider(args, browser=args.infer_mode == 'completion_sds')
     print(vars(args))
     infer_mode = args.infer_mode
     if infer_mode == 'completion':
         from src.inference_engine import AsyncInferenceCompletion as AsyncInfer
     elif infer_mode == 'completion_sds':
+        import nltk
+        nltk.download('punkt')
         from src.inference_engine import AsyncInferenceCompletionSDS as AsyncInfer
     elif infer_mode == 'default':
         from src.inference_engine import AsyncInference as AsyncInfer

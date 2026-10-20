@@ -1,0 +1,7 @@
+-r ../requirements-search.txt
+# Lightweight dependencies for the resolver and scripted evaluation-loop tests.
+openai==1.76.0
+tqdm==4.67.1
+requests==2.32.3
+aiolimiter==1.2.1
+langid==1.1.6

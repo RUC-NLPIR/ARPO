@@ -1,5 +1,6 @@
 import time
 import hashlib
+import uuid
 from .utils import extract_answer
 
 
@@ -27,6 +28,9 @@ class SampleProcessor:
             session_content = f"{system_prompt}_{question}"
             session_id = hashlib.md5(session_content.encode()).hexdigest()
         self.session_id = session_id
+        # Separate from the existing model-routing ID, which may encode text.
+        # One opaque MCP identity belongs to this research sample across calls.
+        self.search_session_id = str(uuid.uuid4())
 
         self.sample_start_time = None
         self.llm_time = 0
@@ -120,6 +124,7 @@ class SampleProcessor:
             search_query,
             timeout=120,
             sample_stat=self.sample_stat,
+            session_id=self.search_session_id,
         )
         self.search_time += time.time() - search_start
         if search_query is None or search_result is None:

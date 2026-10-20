@@ -3,15 +3,14 @@ import time
 import json
 import os
 
-from vllm import SamplingParams
-from transformers import AutoTokenizer
 from typing import Dict, Any, Optional
 from tqdm.asyncio import tqdm as async_tqdm
 
 from .prompt_manager import PromptManager
 from .data_loader import DataLoader
 from .tools.tool_executor import ToolExecutor
-from .tools import PythonTool, BingSearchTool, BingSearchToolSDS
+from .tools import PythonTool
+from .tools.search_provider import create_search_tool
 from .vllm_client_pool import VLLMClientPool
 from .sample_processor import SampleProcessor, SampleProcessorCompletion
 
@@ -19,6 +18,9 @@ from .sample_processor import SampleProcessor, SampleProcessorCompletion
 class AsyncInference:
 
     def __init__(self, args):
+        from vllm import SamplingParams
+        from transformers import AutoTokenizer
+
         self.args = args
         self.vllm_pool = VLLMClientPool(
             endpoints=args.endpoints,
@@ -31,7 +33,7 @@ class AsyncInference:
             args.model_path, trust_remote_code=True
         )
         self.data_loaders = [
-            DataLoader(dataset_name, args.dataset_path)
+            DataLoader(dataset_name, args.data_path)
             for dataset_name in args.dataset_name
         ]
         self.args.sampling_params = SamplingParams(
@@ -66,17 +68,9 @@ class AsyncInference:
             max_concurrent=self.args.python_max_concurrent,
         )
         tool_executor.register_tool(python_tool)
-        search_tool = BingSearchTool(
-            api_key=self.args.bing_api_key,
-            zone=self.args.bing_zone,
-            max_results=self.args.search_max_results,
-            result_length=self.args.search_result_length,
-            requests_per_second=self.args.bing_requests_per_second,
-            search_cache_file=self.args.search_cache_file,
-            max_retries=self.args.bing_max_retries,
-            retry_delay=self.args.bing_retry_delay,
-        )
-        tool_executor.register_tool(search_tool)
+        search_tool = create_search_tool(self.args)
+        if search_tool is not None:
+            tool_executor.register_tool(search_tool)
         return tool_executor
 
     def get_processor(self, sample_stat, session_id):
@@ -263,19 +257,7 @@ class AsyncInferenceCompletionSDS(AsyncInferenceCompletion):
             max_concurrent=self.args.python_max_concurrent,
         )
         tool_executor.register_tool(python_tool)
-        search_tool = BingSearchToolSDS(
-            api_key=self.args.bing_api_key,
-            zone=self.args.bing_zone,
-            max_results=self.args.search_max_results,
-            result_length=self.args.search_result_length,
-            requests_per_second=self.args.bing_requests_per_second,
-            max_retries=self.args.bing_max_retries,
-            retry_delay=self.args.bing_retry_delay,
-            search_cache_file=self.args.search_cache_file,
-            url_cache_file=self.args.url_cache_file,
-            summ_model_path=self.args.summ_model_path,
-            summ_model_urls=self.args.summ_model_urls,
-            summ_model_name=self.args.summ_model_name,
-        )
-        tool_executor.register_tool(search_tool)
+        search_tool = create_search_tool(self.args, browser=True)
+        if search_tool is not None:
+            tool_executor.register_tool(search_tool)
         return tool_executor

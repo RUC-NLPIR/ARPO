@@ -1,0 +1,4 @@
+# MCP client versions compatible with evaluation/requirement.txt's Pydantic 2.10.
+mcp==1.12.4
+pydantic>=2.8,<2.11
+sse-starlette>=1.6.1,<3
